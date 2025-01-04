@@ -1,0 +1,7 @@
+gradio
+onnxruntime
+opencv-python-headless
+numpy
+Pillow
+huggingface-hub
+tqdm
