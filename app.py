@@ -49,7 +49,6 @@ class SignatureDetector:
     def __init__(self, model_path):
         self.model_path = model_path
         self.classes = ["signature"]
-        self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
         self.input_width = 640
         self.input_height = 640
         
@@ -78,6 +77,7 @@ class SignatureDetector:
     
     def draw_detections(self, img, box, score, class_id):
         x1, y1, w, h = box
+        self.color_palette = np.random.uniform(0, 255, size=(len(self.classes), 3))
         color = self.color_palette[class_id]
         
         cv2.rectangle(img, (int(x1), int(y1)), (int(x1 + w), int(y1 + h)), color, 2)
@@ -156,29 +156,95 @@ def create_gradio_interface():
     # Initialize the detector
     detector = SignatureDetector(MODEL_PATH)
     
-    # Create Gradio interface
-    iface = gr.Interface(
-        fn=detector.detect,
-        inputs=[
-            gr.Image(label="Upload your Document", type="pil"),
-            gr.Slider(minimum=0.0, maximum=1.0, value=0.2, step=0.05, 
-                     label="Confidence Threshold", 
-                     info="Adjust the minimum confidence score required for detection"),
-            gr.Slider(minimum=0.0, maximum=1.0, value=0.5, step=0.05, 
-                     label="IoU Threshold",
-                     info="Adjust the Intersection over Union threshold for NMS")
-        ],
-        outputs=gr.Image(label="Detection Results"),
-        title="Signature Detector",
-        description="Upload an image to detect signatures using YOLOv8. Use the sliders to adjust detection sensitivity.",
-        examples=[
-            ["assets/images/example_1.jpg", 0.2, 0.5],
-            ["assets/images/example_2.jpg", 0.2, 0.5],
-            ["assets/images/example_3.jpg", 0.2, 0.5],
-            ["assets/images/example_4.jpg", 0.2, 0.5]
-        ]
-    )
     
+    css = """
+    .custom-button {
+        background-color: #b0ffb8 !important;
+        color: black !important;
+    }
+    .custom-button:hover {
+        background-color: #b0ffb8b3 !important;
+    }
+    """
+
+    with gr.Blocks(
+        theme = gr.themes.Soft(
+            primary_hue="indigo",
+            secondary_hue="gray",
+            neutral_hue="gray"
+        ),
+        css=css
+    ) as iface:
+        gr.Markdown(
+            """
+            <div style="display: flex; align-items: center;">
+                <img src="https://cdn.prod.website-files.com/65155fabb679475d43638cde/65396826ed65fb2d37f242cf_tech4humans.png" alt="logo" style="width: 50px; height: 50px; margin-right: 15px; vertical-align: middle;">
+                <span style="font-size: 24px; font-weight: bold;">Tech4Humans - Detector de Assinaturas</span>
+            </div>
+            """,
+            elem_id="header"
+        )
+        
+
+        with gr.Row():
+            with gr.Column():  # Coluna para a imagem de entrada e controles
+                input_image = gr.Image(label="Faça o upload do seu documento", type="pil")
+                
+                with gr.Row():  # Linha para os botões
+                    clear_btn = gr.ClearButton([input_image], value="Limpar")
+                    submit_btn = gr.Button("Detectar", elem_classes="custom-button")
+                
+                confidence_threshold = gr.Slider(
+                    minimum=0.0,
+                    maximum=1.0,
+                    value=0.2,
+                    step=0.05,
+                    label="Limiar de Confiança",
+                    info="Ajuste a pontuação mínima de confiança necessária para detecção."
+                )
+                iou_threshold = gr.Slider(
+                    minimum=0.0,
+                    maximum=1.0,
+                    value=0.5,
+                    step=0.05,
+                    label="Limiar de IoU",
+                    info="Ajuste o limiar de Interseção sobre União para NMS."
+                )
+            
+            output_image = gr.Image(label="Resultados da Detecção")  # Em outra coluna
+        
+        clear_btn.add(output_image)
+
+        gr.Examples(
+            examples=[
+                ["assets/images/example_1.jpg"],
+                ["assets/images/example_2.jpg"],
+                ["assets/images/example_3.jpg"],
+                ["assets/images/example_4.jpg"],
+                ["assets/images/example_5.jpg"],
+                ["assets/images/example_6.jpg"]
+            ],
+            inputs=input_image,
+            outputs=output_image,
+            fn=detector.detect,
+            label="Exemplos",
+            cache_examples=False
+        )
+
+
+        submit_btn.click(
+            fn=detector.detect,
+            inputs=[input_image, confidence_threshold, iou_threshold],
+            outputs=output_image,
+        )
+
+        gr.Markdown(
+            """
+            ---
+            **Desenvolvido por [Tech4Humans](https://www.tech4h.com.br/)** | **Modelo:** [YOLOv8s](https://huggingface.co/tech4humans/yolov8s-signature-detector) | **Datasets:** [Tobacco800](https://paperswithcode.com/dataset/tobacco-800), [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up)
+            """
+        )
+        
     return iface
 
 if __name__ == "__main__":
