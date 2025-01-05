@@ -181,10 +181,17 @@ def create_gradio_interface():
                 <img src="https://cdn.prod.website-files.com/65155fabb679475d43638cde/65396826ed65fb2d37f242cf_tech4humans.png" alt="logo" style="width: 50px; height: 50px; margin-right: 15px; vertical-align: middle;">
                 <span style="font-size: 24px; font-weight: bold;">Tech4Humans - Detector de Assinaturas</span>
             </div>
-            """,
-            elem_id="header"
+            
+            Este sistema utiliza o modelo [**YOLOv8s**](https://huggingface.co/tech4humans/yolov8s-signature-detector), especialmente ajustado para a detecção de assinaturas manuscritas em imagens de documentos. 
+            O modelo foi treinado com dados provenientes de dois conjuntos públicos — [**Tobacco800**](https://paperswithcode.com/dataset/tobacco-800) e [**signatures-xc8up**](https://universe.roboflow.com/roboflow-100/signatures-xc8up) — e inclui robustos 
+            mecanismos de pré-processamento e aumento de dados para garantir alta precisão e generalização.
+            
+            Com este detector, é possível identificar assinaturas em documentos digitais com elevada precisão em tempo real, sendo ideal para
+            aplicações que envolvem validação, organização e processamento de documentos.
+            
+            ---
+            """
         )
-        
 
         with gr.Row():
             with gr.Column():  # Coluna para a imagem de entrada e controles
@@ -208,7 +215,7 @@ def create_gradio_interface():
                     value=0.5,
                     step=0.05,
                     label="Limiar de IoU",
-                    info="Ajuste o limiar de Interseção sobre União para NMS."
+                    info="Ajuste o limiar de Interseção sobre União para Non Maximum Suppression (NMS)."
                 )
             
             output_image = gr.Image(label="Resultados da Detecção")  # Em outra coluna
@@ -237,10 +244,31 @@ def create_gradio_interface():
             inputs=[input_image, confidence_threshold, iou_threshold],
             outputs=output_image,
         )
-
+        
         gr.Markdown(
             """
             ---
+            ## Sobre o Modelo e Resultados
+
+            Este projeto utiliza o modelo YOLOv8s ajustado para detecção de assinaturas manuscritas em imagens de documentos. Ele foi treinado com dados provenientes dos conjuntos [Tobacco800](https://paperswithcode.com/dataset/tobacco-800) e [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up), passando por processos de pré-processamento e aumentação de dados.
+
+            ### Principais Métricas:
+            - **Precisão (Precision):** 94,74%
+            - **Revocação (Recall):** 89,72%
+            - **mAP@50:** 94,50%
+            - **mAP@50-95:** 67,35%
+            - **Tempo de Inferência (CPU):** 171,56 ms
+
+            O processo completo de treinamento, ajuste de hiperparâmetros, e avaliação do modelo pode ser consultado em detalhes no repositório abaixo.
+
+            [Leia o README completo no Hugging Face Models](https://huggingface.co/tech4humans/yolov8s-signature-detector)
+
+            ---
+            """
+        )
+
+        gr.Markdown(
+            """
             **Desenvolvido por [Tech4Humans](https://www.tech4h.com.br/)** | **Modelo:** [YOLOv8s](https://huggingface.co/tech4humans/yolov8s-signature-detector) | **Datasets:** [Tobacco800](https://paperswithcode.com/dataset/tobacco-800), [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up)
             """
         )
