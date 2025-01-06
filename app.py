@@ -136,7 +136,7 @@ class SignatureDetector:
         
         return cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
     
-    def detect(self, image, conf_thres, iou_thres):
+    def detect(self, image, conf_thres=0.25, iou_thres=0.5):
         # Preprocess the image
         img_data, original_image = self.preprocess(image)
         
@@ -177,10 +177,7 @@ def create_gradio_interface():
     ) as iface:
         gr.Markdown(
             """
-            <div style="display: flex; align-items: center;">
-                <img src="https://cdn.prod.website-files.com/65155fabb679475d43638cde/65396826ed65fb2d37f242cf_tech4humans.png" alt="logo" style="width: 50px; height: 50px; margin-right: 15px; vertical-align: middle;">
-                <span style="font-size: 24px; font-weight: bold;">Tech4Humans - Detector de Assinaturas</span>
-            </div>
+            # Tech4Humans - Detector de Assinaturas
             
             Este sistema utiliza o modelo [**YOLOv8s**](https://huggingface.co/tech4humans/yolov8s-signature-detector), especialmente ajustado para a detecção de assinaturas manuscritas em imagens de documentos. 
             O modelo foi treinado com dados provenientes de dois conjuntos públicos — [**Tobacco800**](https://paperswithcode.com/dataset/tobacco-800) e [**signatures-xc8up**](https://universe.roboflow.com/roboflow-100/signatures-xc8up) — e inclui robustos 
@@ -204,7 +201,7 @@ def create_gradio_interface():
                 confidence_threshold = gr.Slider(
                     minimum=0.0,
                     maximum=1.0,
-                    value=0.2,
+                    value=0.25,
                     step=0.05,
                     label="Limiar de Confiança",
                     info="Ajuste a pontuação mínima de confiança necessária para detecção."
@@ -221,21 +218,17 @@ def create_gradio_interface():
             output_image = gr.Image(label="Resultados da Detecção")  # Em outra coluna
         
         clear_btn.add(output_image)
-
+        
         gr.Examples(
             examples=[
-                ["assets/images/example_1.jpg"],
-                ["assets/images/example_2.jpg"],
-                ["assets/images/example_3.jpg"],
-                ["assets/images/example_4.jpg"],
-                ["assets/images/example_5.jpg"],
-                ["assets/images/example_6.jpg"]
+                ["assets/images/example_{i}.jpg".format(i=i)] for i in range(1, len(os.listdir(os.path.join("assets", "images")))+1)
             ],
             inputs=input_image,
             outputs=output_image,
             fn=detector.detect,
             label="Exemplos",
-            cache_examples=False
+            cache_examples=True,
+            cache_mode='lazy'
         )
 
 
