@@ -221,7 +221,7 @@ def create_gradio_interface():
         
         gr.Examples(
             examples=[
-                ["assets/images/example_{i}.jpg".format(i=i)] for i in range(1, len(os.listdir(os.path.join("assets", "images")))+1)
+                ["assets/images/example_{i}.jpg".format(i=i)] for i in range(0, len(os.listdir(os.path.join("assets", "images")))+1)
             ],
             inputs=input_image,
             outputs=output_image,
