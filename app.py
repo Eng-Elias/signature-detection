@@ -7,6 +7,8 @@ import onnxruntime as ort
 from collections import deque
 import gradio as gr
 import os
+import sqlite3
+from datetime import datetime
 from huggingface_hub import hf_hub_download
 
 # Model info
@@ -52,6 +54,66 @@ def download_model():
         raise e
 
 
+class MetricsStorage:
+    def __init__(self, db_path="metrics.db"):
+        self.db_path = db_path
+        self.setup_database()
+
+    def setup_database(self):
+        """Initialize the SQLite database and create tables if they don't exist"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                CREATE TABLE IF NOT EXISTS inference_metrics (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    inference_time REAL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            """
+            )
+            conn.commit()
+
+    def add_metric(self, inference_time):
+        """Add a new inference time measurement to the database"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO inference_metrics (inference_time) VALUES (?)",
+                (inference_time,),
+            )
+            conn.commit()
+
+    def get_recent_metrics(self, limit=50):
+        """Get the most recent metrics from the database"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT inference_time FROM inference_metrics ORDER BY timestamp DESC LIMIT ?",
+                (limit,),
+            )
+            results = cursor.fetchall()
+            return [r[0] for r in results]
+
+    def get_total_inferences(self):
+        """Get the total number of inferences recorded"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM inference_metrics")
+            return cursor.fetchone()[0]
+
+    def get_average_time(self, limit=50):
+        """Get the average inference time from the most recent entries"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT AVG(inference_time) FROM (SELECT inference_time FROM inference_metrics ORDER BY timestamp DESC LIMIT ?)",
+                (limit,),
+            )
+            result = cursor.fetchone()[0]
+            return result if result is not None else 0
+
+
 class SignatureDetector:
     def __init__(self, model_path):
         self.model_path = model_path
@@ -64,22 +126,100 @@ class SignatureDetector:
             MODEL_PATH, providers=["CPUExecutionProvider"]
         )
 
-        # Initialize metrics tracking
-        self.inference_times = deque(maxlen=50)  # Store last 50 inference times
-        self.total_inferences = 0
-        self.avg_inference_time = 0
+        self.metrics_storage = MetricsStorage()
 
     def update_metrics(self, inference_time):
-        self.inference_times.append(inference_time)
-        self.total_inferences += 1
-        self.avg_inference_time = sum(self.inference_times) / len(self.inference_times)
+        """Update metrics in persistent storage"""
+        self.metrics_storage.add_metric(inference_time)
 
     def get_metrics(self):
+        """Get current metrics from storage"""
         return {
-            "times": list(self.inference_times),
-            "total_inferences": self.total_inferences,
-            "avg_time": self.avg_inference_time,
+            "times": self.metrics_storage.get_recent_metrics(),
+            "total_inferences": self.metrics_storage.get_total_inferences(),
+            "avg_time": self.metrics_storage.get_average_time(),
         }
+
+    def load_initial_metrics(self):
+        """Load initial metrics for display"""
+        metrics = self.get_metrics()
+
+        if not metrics["times"]:  # Se não houver dados
+            return None, None, None, None
+
+        # Criar plots data
+        hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
+        line_data = pd.DataFrame(
+            {
+                "Inferência": range(len(metrics["times"])),
+                "Tempo (ms)": metrics["times"],
+                "Média": [metrics["avg_time"]] * len(metrics["times"]),
+            }
+        )
+
+        # Criar plots
+        hist_fig, line_fig = self.create_plots(hist_data, line_data)
+
+        return (
+            None,  # output_image
+            f"Total de Inferências: {metrics['total_inferences']}",
+            hist_fig,
+            line_fig,
+        )
+
+    def create_plots(self, hist_data, line_data):
+        """Helper method to create plots"""
+        plt.style.use("dark_background")
+
+        # Histograma
+        hist_fig, hist_ax = plt.subplots(figsize=(8, 4), facecolor="#f0f0f5")
+        hist_ax.set_facecolor("#f0f0f5")
+        hist_data.hist(
+            bins=20, ax=hist_ax, color="#4F46E5", alpha=0.7, edgecolor="white"
+        )
+        hist_ax.set_title(
+            "Distribuição dos Tempos de Inferência",
+            pad=15,
+            fontsize=12,
+            color="#1f2937",
+        )
+        hist_ax.set_xlabel("Tempo (ms)", color="#374151")
+        hist_ax.set_ylabel("Frequência", color="#374151")
+        hist_ax.tick_params(colors="#4b5563")
+        hist_ax.grid(True, linestyle="--", alpha=0.3)
+
+        # Gráfico de linha
+        line_fig, line_ax = plt.subplots(figsize=(8, 4), facecolor="#f0f0f5")
+        line_ax.set_facecolor("#f0f0f5")
+        line_data.plot(
+            x="Inferência",
+            y="Tempo (ms)",
+            ax=line_ax,
+            color="#4F46E5",
+            alpha=0.7,
+            label="Tempo",
+        )
+        line_data.plot(
+            x="Inferência",
+            y="Média",
+            ax=line_ax,
+            color="#DC2626",
+            linestyle="--",
+            label="Média",
+        )
+        line_ax.set_title(
+            "Tempo de Inferência por Execução", pad=15, fontsize=12, color="#1f2937"
+        )
+        line_ax.set_xlabel("Número da Inferência", color="#374151")
+        line_ax.set_ylabel("Tempo (ms)", color="#374151")
+        line_ax.tick_params(colors="#4b5563")
+        line_ax.grid(True, linestyle="--", alpha=0.3)
+        line_ax.legend(frameon=True, facecolor="#f0f0f5", edgecolor="none")
+
+        hist_fig.tight_layout()
+        line_fig.tight_layout()
+
+        return hist_fig, line_fig
 
     def preprocess(self, img):
         # Convert PIL Image to cv2 format
@@ -249,64 +389,8 @@ def create_gradio_interface():
             }
         )
 
-        # Limpar figuras existentes
-        plt.close("all")
-
-        # Configuração do estilo dos plots
-        plt.style.use("dark_background")
-
-        # Criar figura do histograma
-        hist_fig, hist_ax = plt.subplots(figsize=(8, 4), facecolor="#f0f0f5")
-        hist_ax.set_facecolor("#f0f0f5")
-        hist_data.hist(
-            bins=20, ax=hist_ax, color="#4F46E5", alpha=0.7, edgecolor="white"
-        )
-        hist_ax.set_title(
-            "Distribuição dos Tempos de Inferência",
-            pad=15,
-            fontsize=12,
-            color="#1f2937",
-        )
-        hist_ax.set_xlabel("Tempo (ms)", color="#374151")
-        hist_ax.set_ylabel("Frequência", color="#374151")
-        hist_ax.tick_params(colors="#4b5563")
-        hist_ax.grid(True, linestyle="--", alpha=0.3)
-
-        # Criar figura do gráfico de linha
-        line_fig, line_ax = plt.subplots(figsize=(8, 4), facecolor="#f0f0f5")
-        line_ax.set_facecolor("#f0f0f5")
-        line_data.plot(
-            x="Inferência",
-            y="Tempo (ms)",
-            ax=line_ax,
-            color="#4F46E5",
-            alpha=0.7,
-            label="Tempo",
-        )
-        line_data.plot(
-            x="Inferência",
-            y="Média",
-            ax=line_ax,
-            color="#DC2626",
-            linestyle="--",
-            label="Média",
-        )
-        line_ax.set_title(
-            "Tempo de Inferência por Execução", pad=15, fontsize=12, color="#1f2937"
-        )
-        line_ax.set_xlabel("Número da Inferência", color="#374151")
-        line_ax.set_ylabel("Tempo (ms)", color="#374151")
-        line_ax.tick_params(colors="#4b5563")
-        line_ax.grid(True, linestyle="--", alpha=0.3)
-        line_ax.legend(frameon=True, facecolor="#f0f0f5", edgecolor="none")
-
-        # Ajustar layout
-        hist_fig.tight_layout()
-        line_fig.tight_layout()
-
-        # Fechar as figuras para liberar memória
-        plt.close(hist_fig)
-        plt.close(line_fig)
+        # Criar plots
+        hist_fig, line_fig = detector.create_plots(hist_data, line_data)
 
         return (
             output_image,
@@ -425,6 +509,13 @@ def create_gradio_interface():
         submit_btn.click(
             fn=process_image,
             inputs=[input_image, confidence_threshold, iou_threshold],
+            outputs=[output_image, total_inferences, hist_plot, line_plot],
+        )
+
+        # Carregar métricas iniciais ao carregar a página
+        iface.load(
+            fn=detector.load_initial_metrics,
+            inputs=None,
             outputs=[output_image, total_inferences, hist_plot, line_plot],
         )
 
