@@ -93,7 +93,7 @@ class MetricsStorage:
                 (limit,),
             )
             results = cursor.fetchall()
-            return [r[0] for r in results]
+            return [r[0] for r in reversed(results)]
 
     def get_total_inferences(self):
         """Get the total number of inferences recorded"""
@@ -134,10 +134,17 @@ class SignatureDetector:
 
     def get_metrics(self):
         """Get current metrics from storage"""
+        times = self.metrics_storage.get_recent_metrics()
+        total = self.metrics_storage.get_total_inferences()
+        avg = self.metrics_storage.get_average_time()
+
+        start_index = max(0, total - len(times))
+
         return {
-            "times": self.metrics_storage.get_recent_metrics(),
-            "total_inferences": self.metrics_storage.get_total_inferences(),
-            "avg_time": self.metrics_storage.get_average_time(),
+            "times": times,
+            "total_inferences": total,
+            "avg_time": avg,
+            "start_index": start_index,  # Adicionar índice inicial
         }
 
     def load_initial_metrics(self):
@@ -149,9 +156,13 @@ class SignatureDetector:
 
         # Criar plots data
         hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
+        indices = range(
+            metrics["start_index"], metrics["start_index"] + len(metrics["times"])
+        )
+
         line_data = pd.DataFrame(
             {
-                "Inferência": range(len(metrics["times"])),
+                "Inferência": indices,
                 "Tempo (ms)": metrics["times"],
                 "Média": [metrics["avg_time"]] * len(metrics["times"]),
             }
@@ -161,7 +172,7 @@ class SignatureDetector:
         hist_fig, line_fig = self.create_plots(hist_data, line_data)
 
         return (
-            None,  # output_image
+            None,
             f"Total de Inferências: {metrics['total_inferences']}",
             hist_fig,
             line_fig,
@@ -218,6 +229,10 @@ class SignatureDetector:
 
         hist_fig.tight_layout()
         line_fig.tight_layout()
+
+        # Fechar as figuras para liberar memória
+        plt.close(hist_fig)
+        plt.close(line_fig)
 
         return hist_fig, line_fig
 
@@ -381,9 +396,13 @@ def create_gradio_interface():
 
         # Create plots data
         hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
+        indices = range(
+            metrics["start_index"], metrics["start_index"] + len(metrics["times"])
+        )
+
         line_data = pd.DataFrame(
             {
-                "Inferência": range(len(metrics["times"])),
+                "Inferência": indices,
                 "Tempo (ms)": metrics["times"],
                 "Média": [metrics["avg_time"]] * len(metrics["times"]),
             }
