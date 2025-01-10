@@ -420,7 +420,7 @@ def create_gradio_interface():
                 """
             )
 
-        clear_btn.add([output_image, total_inferences, hist_plot, line_plot])
+        clear_btn.add([output_image])
 
         submit_btn.click(
             fn=process_image,
