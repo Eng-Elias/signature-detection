@@ -16,7 +16,8 @@ REPO_ID = "tech4humans/yolov8s-signature-detector"
 FILENAME = "yolov8s.onnx"
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "model.onnx")
-DATABASE_PATH = os.path.join(os.getcwd(), "db", "metrics.db")
+DATABASE_DIR = os.path.join(os.getcwd(), "db")
+DATABASE_PATH = os.path.join(DATABASE_DIR, "metrics.db")
 
 
 def download_model():
@@ -31,7 +32,6 @@ def download_model():
             repo_id=REPO_ID,
             filename=FILENAME,
             local_dir=MODEL_DIR,
-            local_dir_use_symlinks=False,
             force_download=True,
             cache_dir=None,
         )
@@ -124,8 +124,9 @@ class SignatureDetector:
 
         # Initialize ONNX Runtime session
         self.session = ort.InferenceSession(
-            MODEL_PATH, providers=["OpenVINOExecutionProvider"]
+            MODEL_PATH
         )
+        self.session.set_providers(['OpenVINOExecutionProvider'], [{'device_type' : 'CPU'}])
 
         self.metrics_storage = MetricsStorage()
 
@@ -584,5 +585,8 @@ def create_gradio_interface():
 
 
 if __name__ == "__main__":
+    if not os.path.exists(DATABASE_PATH):
+        os.makedirs(DATABASE_DIR, exist_ok=True)
+
     iface = create_gradio_interface()
     iface.launch()
