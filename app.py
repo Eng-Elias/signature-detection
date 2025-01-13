@@ -85,7 +85,7 @@ class MetricsStorage:
             )
             conn.commit()
 
-    def get_recent_metrics(self, limit=50):
+    def get_recent_metrics(self, limit=80):
         """Get the most recent metrics from the database"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -103,7 +103,7 @@ class MetricsStorage:
             cursor.execute("SELECT COUNT(*) FROM inference_metrics")
             return cursor.fetchone()[0]
 
-    def get_average_time(self, limit=50):
+    def get_average_time(self, limit=80):
         """Get the average inference time from the most recent entries"""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
@@ -123,10 +123,10 @@ class SignatureDetector:
         self.input_height = 640
 
         # Initialize ONNX Runtime session
-        self.session = ort.InferenceSession(
-            MODEL_PATH
+        self.session = ort.InferenceSession(MODEL_PATH)
+        self.session.set_providers(
+            ["OpenVINOExecutionProvider"], [{"device_type": "CPU"}]
         )
-        self.session.set_providers(['OpenVINOExecutionProvider'], [{'device_type' : 'CPU'}])
 
         self.metrics_storage = MetricsStorage()
 
@@ -154,7 +154,7 @@ class SignatureDetector:
         metrics = self.get_metrics()
 
         if not metrics["times"]:  # Se não houver dados
-            return None, None, None, None
+            return None, None, None, None, None, None
 
         # Criar plots data
         hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
@@ -178,6 +178,8 @@ class SignatureDetector:
             f"Total de Inferências: {metrics['total_inferences']}",
             hist_fig,
             line_fig,
+            f"{metrics['avg_time']:.2f}",
+            f"{metrics['times'][-1]:.2f}",
         )
 
     def create_plots(self, hist_data, line_data):
@@ -388,11 +390,16 @@ def create_gradio_interface():
         color: #1f2937 !important;
         margin-bottom: 1rem !important;
     }
+    .metrics-row {
+        display: flex !important;
+        gap: 1rem !important;
+        margin-top: 0.5rem !important;
+    }
     """
 
     def process_image(image, conf_thres, iou_thres):
         if image is None:
-            return None, None, None, None
+            return None, None, None, None, None, None
 
         output_image, metrics = detector.detect(image, conf_thres, iou_thres)
 
@@ -421,11 +428,13 @@ def create_gradio_interface():
             ),
             hist_fig,
             line_fig,
+            f"{metrics['avg_time']:.2f}",
+            f"{metrics['times'][-1]:.2f}",
         )
 
     def process_folder(files_path, conf_thres, iou_thres):
         if not files_path:
-            return None, None, None, None
+            return None, None, None, None, None, None
 
         valid_extensions = [".jpg", ".jpeg", ".png"]
         image_files = [
@@ -433,7 +442,7 @@ def create_gradio_interface():
         ]
 
         if not image_files:
-            return None, None, None, None
+            return None, None, None, None, None, None
 
         for img_file in image_files:
             image = Image.open(img_file)
@@ -532,6 +541,17 @@ def create_gradio_interface():
 
             with gr.Column(scale=1):
                 line_plot = gr.Plot(label="Histórico de Tempos", container=True)
+                with gr.Row(elem_classes="metrics-row"):
+                    avg_inference_time = gr.Textbox(
+                        label="Tempo Médio de Inferência (ms)",
+                        show_copy_button=True,
+                        container=True,
+                    )
+                    last_inference_time = gr.Textbox(
+                        label="Último Tempo de Inferência (ms)",
+                        show_copy_button=True,
+                        container=True,
+                    )
 
         with gr.Row(elem_classes="container"):
 
@@ -565,20 +585,41 @@ def create_gradio_interface():
         detect_single_btn.click(
             fn=process_image,
             inputs=[input_image, confidence_threshold, iou_threshold],
-            outputs=[output_image, total_inferences, hist_plot, line_plot],
+            outputs=[
+                output_image,
+                total_inferences,
+                hist_plot,
+                line_plot,
+                avg_inference_time,
+                last_inference_time,
+            ],
         )
 
         detect_folder_btn.click(
             fn=process_folder,
             inputs=[input_folder, confidence_threshold, iou_threshold],
-            outputs=[output_image, total_inferences, hist_plot, line_plot],
+            outputs=[
+                output_image,
+                total_inferences,
+                hist_plot,
+                line_plot,
+                avg_inference_time,
+                last_inference_time,
+            ],
         )
 
         # Carregar métricas iniciais ao carregar a página
         iface.load(
             fn=detector.load_initial_metrics,
             inputs=None,
-            outputs=[output_image, total_inferences, hist_plot, line_plot],
+            outputs=[
+                output_image,
+                total_inferences,
+                hist_plot,
+                line_plot,
+                avg_inference_time,
+                last_inference_time,
+            ],
         )
 
     return iface
