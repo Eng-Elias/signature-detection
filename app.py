@@ -1,21 +1,22 @@
-import cv2
-import numpy as np
-import pandas as pd
-import time
-import matplotlib.pyplot as plt
-import onnxruntime as ort
-from collections import deque
-import gradio as gr
 import os
 import sqlite3
-from datetime import datetime
+import time
+
+import cv2
+import gradio as gr
+import matplotlib.pyplot as plt
+import numpy as np
+import onnxruntime as ort
+import pandas as pd
 from huggingface_hub import hf_hub_download
+from PIL import Image
 
 # Model info
 REPO_ID = "tech4humans/yolov8s-signature-detector"
-FILENAME = "tune/trial_10/weights/best.onnx"
+FILENAME = "yolov8s.onnx"
 MODEL_DIR = "model"
 MODEL_PATH = os.path.join(MODEL_DIR, "model.onnx")
+DATABASE_PATH = os.path.join(os.getcwd(), "db", "metrics.db")
 
 
 def download_model():
@@ -55,7 +56,7 @@ def download_model():
 
 
 class MetricsStorage:
-    def __init__(self, db_path="metrics.db"):
+    def __init__(self, db_path=DATABASE_PATH):
         self.db_path = db_path
         self.setup_database()
 
@@ -123,7 +124,7 @@ class SignatureDetector:
 
         # Initialize ONNX Runtime session
         self.session = ort.InferenceSession(
-            MODEL_PATH, providers=["CPUExecutionProvider"]
+            MODEL_PATH, providers=["OpenVINOExecutionProvider"]
         )
 
         self.metrics_storage = MetricsStorage()
@@ -421,6 +422,23 @@ def create_gradio_interface():
             line_fig,
         )
 
+    def process_folder(files_path, conf_thres, iou_thres):
+        if not files_path:
+            return None, None, None, None
+
+        valid_extensions = [".jpg", ".jpeg", ".png"]
+        image_files = [
+            f for f in files_path if os.path.splitext(f.lower())[1] in valid_extensions
+        ]
+
+        if not image_files:
+            return None, None, None, None
+
+        for img_file in image_files:
+            image = Image.open(img_file)
+
+            yield process_image(image, conf_thres, iou_thres)
+
     with gr.Blocks(
         theme=gr.themes.Soft(
             primary_hue="indigo", secondary_hue="gray", neutral_hue="gray"
@@ -443,13 +461,29 @@ def create_gradio_interface():
         with gr.Row(equal_height=True, elem_classes="main-container"):
             # Coluna da esquerda para controles e informações
             with gr.Column(scale=1):
-                input_image = gr.Image(
-                    label="Faça o upload do seu documento", type="pil"
-                )
+                with gr.Tab("Imagem Única"):
+                    input_image = gr.Image(
+                        label="Faça o upload do seu documento", type="pil"
+                    )
+                    with gr.Row():
+                        clear_single_btn = gr.ClearButton([input_image], value="Limpar")
+                        detect_single_btn = gr.Button(
+                            "Detectar", elem_classes="custom-button"
+                        )
 
-                with gr.Row():
-                    clear_btn = gr.ClearButton([input_image], value="Limpar")
-                    submit_btn = gr.Button("Detectar", elem_classes="custom-button")
+                with gr.Tab("Pasta de Imagens"):
+                    input_folder = gr.File(
+                        label="Faça o upload de uma pasta com imagens",
+                        file_count="directory",
+                        type="filepath",
+                    )
+                    with gr.Row():
+                        clear_folder_btn = gr.ClearButton(
+                            [input_folder], value="Limpar"
+                        )
+                        detect_folder_btn = gr.Button(
+                            "Detectar", elem_classes="custom-button"
+                        )
 
                 with gr.Group():
                     confidence_threshold = gr.Slider(
@@ -474,6 +508,7 @@ def create_gradio_interface():
 
                 with gr.Accordion("Exemplos", open=True):
                     gr.Examples(
+                        label="Exemplos de Imagens",
                         examples=[
                             ["assets/images/example_{i}.jpg".format(i=i)]
                             for i in range(
@@ -523,11 +558,18 @@ def create_gradio_interface():
                 """
             )
 
-        clear_btn.add([output_image])
+        clear_single_btn.add([output_image])
+        clear_folder_btn.add([output_image])
 
-        submit_btn.click(
+        detect_single_btn.click(
             fn=process_image,
             inputs=[input_image, confidence_threshold, iou_threshold],
+            outputs=[output_image, total_inferences, hist_plot, line_plot],
+        )
+
+        detect_folder_btn.click(
+            fn=process_folder,
+            inputs=[input_folder, confidence_threshold, iou_threshold],
             outputs=[output_image, total_inferences, hist_plot, line_plot],
         )
 
