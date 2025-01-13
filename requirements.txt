@@ -1,5 +1,6 @@
 gradio
 onnxruntime
+onnxruntime-openvino
 opencv-python-headless
 numpy
 Pillow
