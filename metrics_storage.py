@@ -1,7 +1,6 @@
-import os
 import sqlite3
 
-from constants import DATABASE_DIR, DATABASE_PATH
+from constants import DATABASE_PATH
 
 
 class MetricsStorage:
