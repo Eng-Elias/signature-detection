@@ -11,4 +11,6 @@ license: agpl-3.0
 short_description: Handwritten Signature Detection
 datasets:
 - tech4humans/signature-detection
+models:
+- tech4humans/signature-detection
 ---
