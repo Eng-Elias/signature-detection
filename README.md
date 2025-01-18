@@ -13,4 +13,6 @@ datasets:
 - tech4humans/signature-detection
 models:
 - tech4humans/signature-detection
+thumbnail: >-
+  https://cdn-uploads.huggingface.co/production/uploads/666b9ef5e6c60b6fc4156675/jTEsF5-xf9Pc8WjNa89d7.png
 ---
