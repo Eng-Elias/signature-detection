@@ -1,13 +1,14 @@
 ---
 title: Signature Detection
-emoji: 🏃
-colorFrom: gray
-colorTo: purple
+emoji: 👁
+colorFrom: blue
+colorTo: green
 sdk: gradio
-sdk_version: 5.9.1
+sdk_version: 5.12.0
 app_file: app.py
 pinned: false
 license: agpl-3.0
+short_description: Handwritten Signature Detection
+datasets:
+- tech4humans/signature-detection
 ---
-
-Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
