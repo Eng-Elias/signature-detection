@@ -12,7 +12,7 @@ short_description: Handwritten Signature Detection
 datasets:
 - tech4humans/signature-detection
 models:
-- tech4humans/signature-detection
+- tech4humans/yolov8s-signature-detector
 thumbnail: >-
   https://cdn-uploads.huggingface.co/production/uploads/666b9ef5e6c60b6fc4156675/jTEsF5-xf9Pc8WjNa89d7.png
 ---
