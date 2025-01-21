@@ -109,10 +109,10 @@ def create_gradio_interface():
         ),
         css=css,
     ) as iface:
-        gr.Markdown(
+        gr.HTML(
             """
-            # Tech4Humans - Detector de Assinaturas
-            
+            <h1>Tech4Humans - Detector de Assinaturas</h1>
+    
             <div style="display: flex; align-items: center; gap: 10px;">
                 <a href="https://huggingface.co/tech4humans/yolov8s-signature-detector">
                     <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/model-on-hf-md-dark.svg" alt="Model on HF">
@@ -124,8 +124,10 @@ def create_gradio_interface():
                     <img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
                 </a>
             </div>
-
-
+            """
+        )
+        gr.Markdown(
+            """
             Este sistema utiliza o modelo [**YOLOv8s**](https://huggingface.co/tech4humans/yolov8s-signature-detector), especialmente ajustado para a detecção de assinaturas manuscritas em imagens de documentos. 
            
             Com este detector, é possível identificar assinaturas em documentos digitais com elevada precisão em tempo real, sendo ideal para
