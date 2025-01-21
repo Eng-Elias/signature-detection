@@ -224,26 +224,7 @@ def create_gradio_interface():
                 - **Tempo de Inferência (CPU):** 171,56 ms
 
                 Os detalhes completos sobre os processos de treinamento, ajuste de hiperparâmetros, avaliação do modelo, construção do dataset e servidor de inferência podem ser consultados nos links abaixo.
-
-                <b></b>
-                <table style="margin-left: auto; margin-right: auto;">
-                    <tr>
-                        <td style="text-align: center; padding: 10px;">
-                        <a href="https://huggingface.co/tech4humans/yolov8s-signature-detector">
-                            <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/model-on-hf-md-dark.svg">
-                        </a>
-                        </td>
-                        <td style="text-align: center; padding: 10px;">
-                        <a href="https://huggingface.co/datasets/tech4humans/signature-detection">
-                            <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/dataset-on-hf-md-dark.svg" alt="Dataset on HF">
-                        </a>
-                        </td>
-                        <td style="text-align: center; padding: 10px;">
-                            <a href="https://github.com/tech4ai/t4ai-signature-detect-server"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Badge" /></a>
-                        </td>
-                    </tr>
-                </table>
-
+                
                 ---
 
                 **Desenvolvido por [Tech4Humans](https://www.tech4h.com.br/)** | **Modelo:** [YOLOv8s](https://huggingface.co/tech4humans/yolov8s-signature-detector) | **Datasets:** [Tobacco800](https://paperswithcode.com/dataset/tobacco-800), [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up)
