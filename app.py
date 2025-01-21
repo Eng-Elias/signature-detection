@@ -223,9 +223,26 @@ def create_gradio_interface():
                 - **mAP@50-95:** 67,35%
                 - **Tempo de Inferência (CPU):** 171,56 ms
 
-                O processo completo de treinamento, ajuste de hiperparâmetros, e avaliação do modelo pode ser consultado em detalhes no repositório abaixo.
+                Os detalhes completos sobre os processos de treinamento, ajuste de hiperparâmetros, avaliação do modelo, construção do dataset e servidor de inferência podem ser consultados nos links abaixo.
 
-                [Leia o README completo no Hugging Face Models](https://huggingface.co/tech4humans/yolov8s-signature-detector)
+                <b></b>
+                <table style="margin-left: auto; margin-right: auto;">
+                    <tr>
+                        <td style="text-align: center; padding: 10px;">
+                        <a href="https://huggingface.co/tech4humans/yolov8s-signature-detector">
+                            <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/model-on-hf-md-dark.svg">
+                        </a>
+                        </td>
+                        <td style="text-align: center; padding: 10px;">
+                        <a href="https://huggingface.co/datasets/tech4humans/signature-detection">
+                            <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/dataset-on-hf-md-dark.svg" alt="Dataset on HF">
+                        </a>
+                        </td>
+                        <td style="text-align: center; padding: 10px;">
+                            <a href="https://github.com/tech4ai/t4ai-signature-detect-server"><img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Badge" /></a>
+                        </td>
+                    </tr>
+                </table>
 
                 ---
 
