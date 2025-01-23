@@ -109,7 +109,7 @@ class SignatureDetector:
 
         return (
             None,
-            f"Total de Inferências: {metrics['total_inferences']}",
+            f"{metrics['total_inferences']}",
             hist_fig,
             line_fig,
             f"{metrics['avg_time']:.2f}",
