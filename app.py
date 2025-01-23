@@ -77,7 +77,7 @@ def create_gradio_interface():
         return (
             output_image,
             gr.update(
-                value=f"Total de Inferências: {metrics['total_inferences']}",
+                value=f"{metrics['total_inferences']}",
                 container=True,
             ),
             hist_fig,
