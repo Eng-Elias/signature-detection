@@ -1,4 +1,3 @@
 .gradio
 .vscode/
 __pycache__/
-*.db
