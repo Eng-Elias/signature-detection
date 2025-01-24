@@ -2,7 +2,9 @@ import os
 
 import gradio as gr
 import pandas as pd
+import matplotlib.pyplot as plt
 from PIL import Image
+from typing import Tuple, List
 
 from constants import MODEL_PATH, DATABASE_DIR, DATABASE_PATH
 from detector import SignatureDetector, download_model
@@ -51,7 +53,7 @@ def create_gradio_interface():
     }
     """
 
-    def process_image(image, conf_thres, iou_thres):
+    def process_image(image: Image.Image, conf_thres: float, iou_thres: float) -> Tuple[Image.Image, str, plt.Figure, plt.Figure, str, str]:
         if image is None:
             return None, None, None, None, None, None
 
@@ -86,13 +88,13 @@ def create_gradio_interface():
             f"{metrics['times'][-1]:.2f}",
         )
 
-    def process_folder(files_path, conf_thres, iou_thres):
-        if not files_path:
+    def process_folder(files_paths: List[str], conf_thres: float, iou_thres: float):
+        if not files_paths:
             return None, None, None, None, None, None
 
         valid_extensions = [".jpg", ".jpeg", ".png"]
         image_files = [
-            f for f in files_path if os.path.splitext(f.lower())[1] in valid_extensions
+            f for f in files_paths if os.path.splitext(f.lower())[1] in valid_extensions
         ]
 
         if not image_files:
@@ -111,7 +113,7 @@ def create_gradio_interface():
     ) as iface:
         gr.HTML(
             """
-            <h1>Tech4Humans - Detector de Assinaturas</h1>
+            <h1>Tech4Humans - Signature Detector</h1>
     
             <div style="display: flex; align-items: center; gap: 10px;">
                 <a href="https://huggingface.co/tech4humans/yolov8s-signature-detector">
@@ -128,40 +130,35 @@ def create_gradio_interface():
         )
         gr.Markdown(
             """
-            Este sistema utiliza o modelo [**YOLOv8s**](https://huggingface.co/tech4humans/yolov8s-signature-detector), especialmente ajustado para a detecção de assinaturas manuscritas em imagens de documentos. 
+            This system uses the [**YOLOv8s**](https://huggingface.co/tech4humans/yolov8s-signature-detector) model, specially fine-tuned for detecting handwritten signatures in document images.
            
-            Com este detector, é possível identificar assinaturas em documentos digitais com elevada precisão em tempo real, sendo ideal para
-            aplicações que envolvem validação, organização e processamento de documentos.
+            With this detector, it is possible to identify signatures in digital documents with high accuracy in real time, making it ideal for applications involving validation, organization, and document processing.
             
             ---
             """
         )
 
         with gr.Row(equal_height=True, elem_classes="main-container"):
-            # Coluna da esquerda para controles e informações
+            # Left column for controls and information
             with gr.Column(scale=1):
-                with gr.Tab("Imagem Única"):
-                    input_image = gr.Image(
-                        label="Faça o upload do seu documento", type="pil"
-                    )
+                with gr.Tab("Single Image"):
+                    input_image = gr.Image(label="Upload your document", type="pil")
                     with gr.Row():
-                        clear_single_btn = gr.ClearButton([input_image], value="Limpar")
+                        clear_single_btn = gr.ClearButton([input_image], value="Clear")
                         detect_single_btn = gr.Button(
-                            "Detectar", elem_classes="custom-button"
+                            "Detect", elem_classes="custom-button"
                         )
 
-                with gr.Tab("Pasta de Imagens"):
+                with gr.Tab("Image Folder"):
                     input_folder = gr.File(
-                        label="Faça o upload de uma pasta com imagens",
+                        label="Upload a folder with images",
                         file_count="directory",
                         type="filepath",
                     )
                     with gr.Row():
-                        clear_folder_btn = gr.ClearButton(
-                            [input_folder], value="Limpar"
-                        )
+                        clear_folder_btn = gr.ClearButton([input_folder], value="Clear")
                         detect_folder_btn = gr.Button(
-                            "Detectar", elem_classes="custom-button"
+                            "Detect", elem_classes="custom-button"
                         )
 
                 with gr.Group():
@@ -170,24 +167,24 @@ def create_gradio_interface():
                         maximum=1.0,
                         value=0.25,
                         step=0.05,
-                        label="Limiar de Confiança",
-                        info="Ajuste a pontuação mínima de confiança necessária para detecção.",
+                        label="Confidence Threshold",
+                        info="Adjust the minimum confidence score required for detection.",
                     )
                     iou_threshold = gr.Slider(
                         minimum=0.0,
                         maximum=1.0,
                         value=0.5,
                         step=0.05,
-                        label="Limiar de IoU",
-                        info="Ajuste o limiar de Interseção sobre União para Non Maximum Suppression (NMS).",
+                        label="IoU Threshold",
+                        info="Adjust the Intersection over Union threshold for Non-Maximum Suppression (NMS).",
                     )
 
             with gr.Column(scale=1):
-                output_image = gr.Image(label="Resultados da Detecção")
+                output_image = gr.Image(label="Detection Results")
 
-                with gr.Accordion("Exemplos", open=True):
+                with gr.Accordion("Examples", open=True):
                     gr.Examples(
-                        label="Exemplos de Imagens",
+                        label="Image Examples",
                         examples=[
                             ["assets/images/example_{i}.jpg".format(i=i)]
                             for i in range(
@@ -204,20 +201,20 @@ def create_gradio_interface():
         with gr.Row(elem_classes="metrics-container"):
             with gr.Column(scale=1):
                 total_inferences = gr.Textbox(
-                    label="Total de Inferências", show_copy_button=True, container=True
+                    label="Total Inferences", show_copy_button=True, container=True
                 )
-                hist_plot = gr.Plot(label="Distribuição dos Tempos", container=True)
+                hist_plot = gr.Plot(label="Time Distribution", container=True)
 
             with gr.Column(scale=1):
-                line_plot = gr.Plot(label="Histórico de Tempos", container=True)
+                line_plot = gr.Plot(label="Time History", container=True)
                 with gr.Row(elem_classes="metrics-row"):
                     avg_inference_time = gr.Textbox(
-                        label="Tempo Médio de Inferência (ms)",
+                        label="Average Inference Time (ms)",
                         show_copy_button=True,
                         container=True,
                     )
                     last_inference_time = gr.Textbox(
-                        label="Último Tempo de Inferência (ms)",
+                        label="Last Inference Time (ms)",
                         show_copy_button=True,
                         container=True,
                     )
@@ -227,22 +224,22 @@ def create_gradio_interface():
             gr.Markdown(
                 """
                 ---
-                ## Sobre o Projeto
+                ## About the Project
 
-                Este projeto utiliza o modelo YOLOv8s ajustado para detecção de assinaturas manuscritas em imagens de documentos. Ele foi treinado com dados provenientes dos conjuntos [Tobacco800](https://paperswithcode.com/dataset/tobacco-800) e [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up), passando por processos de pré-processamento e aumentação de dados.
+                This project uses the YOLOv8s model fine-tuned for detecting handwritten signatures in document images. It was trained with data from the [Tobacco800](https://paperswithcode.com/dataset/tobacco-800) and [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up) datasets, undergoing preprocessing and data augmentation processes.
 
-                ### Principais Métricas:
-                - **Precisão (Precision):** 94,74%
-                - **Revocação (Recall):** 89,72%
-                - **mAP@50:** 94,50%
-                - **mAP@50-95:** 67,35%
-                - **Tempo de Inferência (CPU):** 171,56 ms
+                ### Key Metrics:
+                - **Precision:** 94.74%
+                - **Recall:** 89.72%
+                - **mAP@50:** 94.50%
+                - **mAP@50-95:** 67.35%
+                - **Inference Time (CPU):** 171.56 ms
 
-                Os detalhes completos sobre os processos de treinamento, ajuste de hiperparâmetros, avaliação do modelo, construção do dataset e servidor de inferência podem ser consultados nos links abaixo.
+                Complete details on the training process, hyperparameter tuning, model evaluation, dataset creation, and inference server can be found in the links below.
                 
                 ---
 
-                **Desenvolvido por [Tech4Humans](https://www.tech4h.com.br/)** | **Modelo:** [YOLOv8s](https://huggingface.co/tech4humans/yolov8s-signature-detector) | **Datasets:** [Tobacco800](https://paperswithcode.com/dataset/tobacco-800), [signatures-xc8up](https://universe.roboflow.com/roboflow-100/signatures-xc8up)
+                **Developed by [Tech4Humans](https://www.tech4h.com.br/)** | **Model:** [YOLOv8s](https://huggingface.co/tech4humans/yolov8s-signature-detector) | **Dataset:** [Tobacco800 + signatures-xc8up](https://huggingface.co/datasets/tech4humans/signature-detection)
                 """
             )
 
@@ -288,13 +285,13 @@ def create_gradio_interface():
                 last_inference_time,
             ],
         )
-
+    
     return iface
 
 
 if __name__ == "__main__":
     if not os.path.exists(DATABASE_PATH):
         os.makedirs(DATABASE_DIR, exist_ok=True)
-
+    
     iface = create_gradio_interface()
     iface.launch()
