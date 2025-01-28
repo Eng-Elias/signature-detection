@@ -60,20 +60,19 @@ def create_gradio_interface():
         output_image, metrics = detector.detect(image, conf_thres, iou_thres)
 
         # Create plots data
-        hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
+        hist_data = pd.DataFrame({"Time (ms)": metrics["times"]})
         indices = range(
             metrics["start_index"], metrics["start_index"] + len(metrics["times"])
         )
 
         line_data = pd.DataFrame(
             {
-                "Inferência": indices,
-                "Tempo (ms)": metrics["times"],
-                "Média": [metrics["avg_time"]] * len(metrics["times"]),
+                "Inference": indices,
+                "Time (ms)": metrics["times"],
+                "Mean": [metrics["avg_time"]] * len(metrics["times"]),
             }
         )
 
-        # Criar plots
         hist_fig, line_fig = detector.create_plots(hist_data, line_data)
 
         return (

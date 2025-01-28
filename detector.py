@@ -109,16 +109,16 @@ class SignatureDetector:
         if not metrics["times"]:
             return None, None, None, None, None, None
 
-        hist_data = pd.DataFrame({"Tempo (ms)": metrics["times"]})
+        hist_data = pd.DataFrame({"Time (ms)": metrics["times"]})
         indices = range(
             metrics["start_index"], metrics["start_index"] + len(metrics["times"])
         )
 
         line_data = pd.DataFrame(
             {
-                "Inferência": indices,
-                "Tempo (ms)": metrics["times"],
-                "Média": [metrics["avg_time"]] * len(metrics["times"]),
+                "Inference": indices,
+                "Time (ms)": metrics["times"],
+                "Mean": [metrics["avg_time"]] * len(metrics["times"]),
             }
         )
 
@@ -155,13 +155,13 @@ class SignatureDetector:
             bins=20, ax=hist_ax, color="#4F46E5", alpha=0.7, edgecolor="white"
         )
         hist_ax.set_title(
-            "Distribuição dos Tempos de Inferência",
+            "Distribution of Inference Times",
             pad=15,
             fontsize=12,
             color="#1f2937",
         )
-        hist_ax.set_xlabel("Tempo (ms)", color="#374151")
-        hist_ax.set_ylabel("Frequência", color="#374151")
+        hist_ax.set_xlabel("Time (ms)", color="#374151")
+        hist_ax.set_ylabel("Frequency", color="#374151")
         hist_ax.tick_params(colors="#4b5563")
         hist_ax.grid(True, linestyle="--", alpha=0.3)
 
@@ -169,29 +169,31 @@ class SignatureDetector:
         line_fig, line_ax = plt.subplots(figsize=(8, 4), facecolor="#f0f0f5")
         line_ax.set_facecolor("#f0f0f5")
         line_data.plot(
-            x="Inferência",
-            y="Tempo (ms)",
+            x="Inference",
+            y="Time (ms)",
             ax=line_ax,
             color="#4F46E5",
             alpha=0.7,
-            label="Tempo",
+            label="Time",
         )
         line_data.plot(
-            x="Inferência",
-            y="Média",
+            x="Inference",
+            y="Mean",
             ax=line_ax,
             color="#DC2626",
             linestyle="--",
-            label="Média",
+            label="Mean",
         )
         line_ax.set_title(
-            "Tempo de Inferência por Execução", pad=15, fontsize=12, color="#1f2937"
+            "Inference Time per Execution", pad=15, fontsize=12, color="#1f2937"
         )
-        line_ax.set_xlabel("Número da Inferência", color="#374151")
-        line_ax.set_ylabel("Tempo (ms)", color="#374151")
+        line_ax.set_xlabel("Inference Number", color="#374151")
+        line_ax.set_ylabel("Time (ms)", color="#374151")
         line_ax.tick_params(colors="#4b5563")
         line_ax.grid(True, linestyle="--", alpha=0.3)
-        line_ax.legend(frameon=True, facecolor="#f0f0f5", edgecolor="none")
+        line_ax.legend(
+            frameon=True, facecolor="#f0f0f5", edgecolor="white", labelcolor="black"
+        )
 
         hist_fig.tight_layout()
         line_fig.tight_layout()
