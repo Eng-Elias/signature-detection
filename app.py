@@ -293,4 +293,4 @@ if __name__ == "__main__":
         os.makedirs(DATABASE_DIR, exist_ok=True)
     
     iface = create_gradio_interface()
-    iface.launch()
+    iface.launch(ssr_mode=False)
