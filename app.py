@@ -124,6 +124,9 @@ def create_gradio_interface():
                 <a href="https://github.com/tech4ai/t4ai-signature-detect-server">
                     <img src="https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white" alt="GitHub">
                 </a>
+                <a href="https://huggingface.co/blog/samuellimabraz/signature-detection-model">
+                    <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/paper-page-md-dark.svg" alt="Article">
+                </a>
             </div>
             """
         )
