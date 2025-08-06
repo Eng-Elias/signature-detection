@@ -26,8 +26,8 @@ def download_model():
             repo_id=REPO_ID,
             filename=FILENAME,
             local_dir=MODEL_DIR,
-            force_download=True,
             cache_dir=None,
+            token=os.getenv("HF_TOKEN"),
         )
 
         # Move the file to the correct location if it's not there already
