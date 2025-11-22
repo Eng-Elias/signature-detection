@@ -1,0 +1,6 @@
+# PDF Application Requirements
+# Install base requirements first: pip install -r requirements.txt
+# Then install PDF-specific requirements: pip install -r requirements_pdf.txt
+
+# PDF Processing
+PyMuPDF==1.24.14

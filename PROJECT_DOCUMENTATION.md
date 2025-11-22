@@ -4,17 +4,30 @@
 
 This project is an AI-powered **Signature Detection System** that identifies handwritten signatures in document images using a fine-tuned **YOLOv8s** model. The system provides a web interface built with Gradio for easy interaction and real-time performance metrics tracking.
 
+### 🆕 Two Applications Available
+
+1. **app.py** - Original image-only interface with folder upload support
+2. **pdf_app.py** - Enhanced interface with PDF support and batch processing (NEW!)
+
+> 📘 For PDF functionality documentation, see [PDF_APP_README.md](PDF_APP_README.md)
+
 ---
 
 ## 📁 Project Structure
 
 ```
 signature-detection/
-├── app.py                    # Gradio web interface
+├── app.py                    # Gradio web interface (images only)
+├── pdf_app.py                # NEW: PDF & Image interface
 ├── detector.py               # Core detection logic
+├── pdf_utils.py              # NEW: PDF processing utilities
 ├── constants.py              # Configuration constants
 ├── metrics_storage.py        # SQLite database for metrics
 ├── requirements.txt          # Python dependencies
+├── requirements_pdf.txt      # NEW: PDF dependencies
+├── example_pdf_usage.py      # NEW: Usage examples
+├── PROJECT_DOCUMENTATION.md  # This file
+├── PDF_APP_README.md         # NEW: PDF app documentation
 ├── .env                      # Environment variables (HF_TOKEN)
 ├── model/                    # Downloaded ONNX model
 │   └── model.onnx
