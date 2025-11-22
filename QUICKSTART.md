@@ -2,13 +2,16 @@
 
 ## Choose Your Application
 
-This project offers **two Gradio interfaces** for signature detection:
+This project offers **three Gradio interfaces** for signature detection:
 
 ### 1️⃣ **app.py** - Image Interface
 For processing **images only** with folder upload support.
 
 ### 2️⃣ **pdf_app.py** - PDF & Image Interface  
 For processing **both PDFs and images** with batch PDF processing.
+
+### 3️⃣ **pdf_app_enhanced.py** - Multi-Page PDF Navigator ⭐ NEW!
+For processing **all PDF pages** with navigation between pages and grouped signatures.
 
 ---
 
@@ -19,7 +22,7 @@ For processing **both PDFs and images** with batch PDF processing.
 pip install -r requirements.txt
 ```
 
-### PDF Support (for pdf_app.py)
+### PDF Support (for pdf_app.py & pdf_app_enhanced.py)
 ```bash
 pip install -r requirements.txt
 pip install -r requirements_pdf.txt
@@ -55,23 +58,46 @@ python pdf_app.py
 - ✅ Single page or all pages mode
 - ✅ Page selector
 - ✅ Batch PDF processing
+- ✅ Cropped signature gallery
 - ✅ Real-time metrics
 
-**Best for:** Processing PDF documents and extracting signatures from multiple pages
+**Best for:** Processing PDF documents page by page
+
+---
+
+### Option 3: Enhanced Multi-Page PDF Navigator ⭐ RECOMMENDED for PDFs
+```bash
+python pdf_app_enhanced.py
+```
+
+**Features:**
+- ✅ Process ALL PDF pages at once
+- ✅ Navigate between pages (Previous/Next buttons)
+- ✅ Page slider for instant jumping
+- ✅ Signatures grouped by page
+- ✅ Cropped signature gallery per page
+- ✅ Instant page switching (no reprocessing)
+- ✅ Progress bar during processing
+- ✅ Real-time metrics per page
+
+**Best for:** Multi-page PDFs where you need to review signatures across different pages
 
 ---
 
 ## 📊 Quick Comparison
 
-| Feature | app.py | pdf_app.py |
-|---------|--------|------------|
-| **Images (JPG/PNG)** | ✅ | ✅ |
-| **PDF Files** | ❌ | ✅ |
-| **Folder Upload** | ✅ | ❌ |
-| **PDF Batch Processing** | ❌ | ✅ |
-| **Page Selection** | ❌ | ✅ |
-| **Example Gallery** | ✅ | ❌ |
-| **Best Use Case** | Multiple images | PDF documents |
+| Feature | app.py | pdf_app.py | pdf_app_enhanced.py |
+|---------|--------|------------|---------------------|
+| **Images (JPG/PNG)** | ✅ | ✅ | ✅ |
+| **PDF Files** | ❌ | ✅ | ✅ |
+| **Folder Upload** | ✅ | ❌ | ❌ |
+| **PDF Batch Processing** | ❌ | ✅ | ✅ |
+| **Page Navigation** | ❌ | ❌ | ✅ |
+| **Instant Page Switching** | ❌ | ❌ | ✅ |
+| **Signatures by Page** | ❌ | ❌ | ✅ |
+| **Cropped Signatures** | ❌ | ✅ | ✅ |
+| **Example Gallery** | ✅ | ❌ | ❌ |
+| **Best Use Case** | Multiple images | Single PDFs | Multi-page PDFs |
 
 ---
 
@@ -112,6 +138,33 @@ python pdf_app.py
 4. **Click "Detect Signatures"**
 
 5. **For batch:** Use "Batch PDF Processing" tab and click "Process All Pages"
+
+---
+
+### Using pdf_app_enhanced.py ⭐
+
+1. **Start the app:**
+   ```bash
+   python pdf_app_enhanced.py
+   ```
+
+2. **Switch to "Multi-Page PDF" tab**
+
+3. **Upload your PDF document**
+
+4. **Click "Process All Pages"**
+   - Wait for progress bar to complete
+   - All pages processed and stored
+
+5. **Navigate between pages:**
+   - Click **◀ Previous** or **Next ▶** buttons
+   - Or drag the **page slider** to jump to any page
+   - View signatures for each page individually
+
+6. **Review signatures:**
+   - Each page shows only its signatures
+   - No reprocessing when switching pages
+   - Instant navigation
 
 ---
 
