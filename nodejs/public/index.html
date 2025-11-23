@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Detection System - Multi-Page PDF Navigator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>📝 Signature Detection System</h1>
+            <p class="subtitle">Multi-Page PDF Navigator with YOLOv8</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel - Controls -->
+            <div class="left-panel">
+                <div class="card">
+                    <h2>📤 Upload Document</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="single">Single Page</button>
+                        <button class="tab-btn" data-tab="multi">Multi-Page PDF</button>
+                    </div>
+
+                    <!-- Single Page Tab -->
+                    <div class="tab-content active" id="single-tab">
+                        <div class="file-upload">
+                            <input type="file" id="single-file" accept=".jpg,.jpeg,.png,.pdf">
+                            <label for="single-file" class="file-label">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Choose Image/PDF (single page)</span>
+                            </label>
+                            <button class="btn btn-primary" id="process-single-btn">Detect Signatures</button>
+                        </div>
+                    </div>
+
+                    <!-- Multi-Page Tab -->
+                    <div class="tab-content" id="multi-tab">
+                        <div class="file-upload">
+                            <input type="file" id="multi-file" accept=".pdf">
+                            <label for="multi-file" class="file-label">
+                                <span class="file-icon">📁</span>
+                                <span class="file-text">Choose Multi-Page PDF</span>
+                            </label>
+                            <button class="btn btn-primary" id="process-multi-btn">Process All Pages</button>
+                        </div>
+                    </div>
+
+                    <div class="settings">
+                        <h3>⚙️ Detection Settings</h3>
+                        <div class="slider-group">
+                            <label>
+                                Confidence Threshold: <span id="conf-value">0.25</span>
+                                <input type="range" id="conf-threshold" min="0" max="1" step="0.05" value="0.25">
+                            </label>
+                        </div>
+                        <div class="slider-group">
+                            <label>
+                                IoU Threshold: <span id="iou-value">0.50</span>
+                                <input type="range" id="iou-threshold" min="0" max="1" step="0.05" value="0.50">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics Card -->
+                <div class="card metrics-card">
+                    <h3>📊 Performance Metrics</h3>
+                    <div class="metric">
+                        <span class="metric-label">Total Inferences:</span>
+                        <span class="metric-value" id="total-inferences">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Average Time:</span>
+                        <span class="metric-value" id="avg-time">0 ms</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Last Inference:</span>
+                        <span class="metric-value" id="last-time">0 ms</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="right-panel">
+                <!-- Status Bar -->
+                <div class="status-bar" id="status-bar">
+                    <span id="status-text">Ready to process</span>
+                </div>
+
+                <!-- Navigation Controls (hidden initially) -->
+                <div class="nav-controls hidden" id="nav-controls">
+                    <button class="btn btn-nav" id="prev-btn">◀ Previous</button>
+                    <input type="range" id="page-slider" min="1" max="1" value="1" class="page-slider">
+                    <span id="page-info">Page 1 of 1</span>
+                    <button class="btn btn-nav" id="next-btn">Next ▶</button>
+                </div>
+
+                <!-- Annotated Document -->
+                <div class="card">
+                    <h3>📄 Annotated Document</h3>
+                    <div class="image-container" id="annotated-container">
+                        <div class="placeholder">
+                            <span class="placeholder-icon">🖼️</span>
+                            <p>Upload a document to see results</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Signatures Section -->
+                <div class="card signatures-section hidden" id="signatures-section">
+                    <h3>🖼️ Extracted Signatures by Page</h3>
+                    <div id="signatures-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay hidden" id="loading">
+            <div class="spinner"></div>
+            <p>Processing...</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

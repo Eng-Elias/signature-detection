@@ -1,0 +1,48 @@
+{
+  "name": "signature-detection-nodejs",
+  "version": "1.0.0",
+  "description": "Signature detection system using YOLOv8 and ONNX Runtime in Node.js with TypeScript",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts",
+    "watch": "tsc --watch",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "yolov8",
+    "onnx",
+    "signature-detection",
+    "pdf-processing",
+    "typescript",
+    "computer-vision"
+  ],
+  "author": "Tech4Humans",
+  "license": "MIT",
+  "dependencies": {
+    "onnxruntime-node": "^1.16.3",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.1",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^3.11.174",
+    "canvas": "^2.11.2",
+    "better-sqlite3": "^9.2.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/cors": "^2.8.17",
+    "@types/better-sqlite3": "^7.6.8",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "rimraf": "^5.0.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
