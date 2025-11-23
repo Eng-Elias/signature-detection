@@ -2,6 +2,14 @@
 
 A Node.js/TypeScript implementation of the signature detection system using YOLOv8 and ONNX Runtime, with a clean HTML/CSS/JS frontend.
 
+---
+
+## 🎥 Demo Video
+
+**Watch the system in action:** [Demo Video on Google Drive](https://drive.google.com/file/d/1ZNG5jIFpTrwEoAjkndUAKllohoySiD52/view?usp=sharing)
+
+---
+
 ## 🎯 Features
 
 - ✅ **YOLOv8 ONNX Model** - Fast signature detection using pre-trained model
@@ -65,14 +73,7 @@ nodejs/
    # Create model directory
    mkdir model
    
-   # Copy model from parent directory
-   cp ../model/model.onnx ./model/
-   ```
-
-4. **Create environment file** (optional)
-   ```bash
-   cp .env.example .env
-   # Edit .env if needed
+   # Put model file `model.onnx` in it
    ```
 
 ### Running the Application
@@ -225,17 +226,6 @@ Response:
 - Persistent storage in SQLite
 
 ## ⚙️ Configuration
-
-### Environment Variables
-
-Create a `.env` file (copy from `.env.example`):
-
-```env
-PORT=3000
-MODEL_PATH=./model/model.onnx
-DATABASE_PATH=./db/metrics.db
-```
-
 ### Constants
 
 Edit `src/constants.ts` to change:
@@ -300,11 +290,7 @@ Run `npm install` to ensure all dependencies are installed.
 
 ### Model Loading Errors
 
-Ensure the ONNX model is in the correct location:
-```bash
-mkdir -p model
-cp ../model/model.onnx ./model/
-```
+Ensure the ONNX model is in the correct location: `model/model.onnx`
 
 ### Port Already in Use
 
@@ -357,33 +343,3 @@ On Windows, install [Windows Build Tools](https://github.com/felixrieseberg/wind
 - **Memory Usage**: ~200-300MB (idle)
 - **PDF Processing**: ~1-2s per page
 - **Concurrent Requests**: Supported via Express
-
-## 🤝 Contributing
-
-This is a direct port of the Python Gradio application. Contributions welcome for:
-- Performance optimizations
-- Additional PDF rendering options (pdf.js, pdf-poppler)
-- Enhanced UI features
-- Better error handling
-- Unit tests
-
-## 📜 License
-
-Same license as the parent Python project.
-
-## 🙏 Acknowledgments
-
-- **Python Implementation**: Original Gradio-based app
-- **YOLOv8**: Ultralytics
-- **ONNX Runtime**: Microsoft
-- **Express.js**: Node.js Foundation
-
-## 📧 Support
-
-For issues specific to the Node.js implementation, please refer to the main project README.
-
----
-
-**Built with ❤️ as a Node.js/TypeScript port of the Python signature detection system**
-
-**Ready to detect signatures!** 🚀
