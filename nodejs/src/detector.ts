@@ -148,7 +148,10 @@ export class SignatureDetector {
      * Draw bounding boxes on image
      */
     async drawBoxes(imageBuffer: Buffer, boxes: BoundingBox[]): Promise<Buffer> {
-        const img = await loadImage(imageBuffer);
+        // Convert to PNG first to avoid JPEG canvas issues
+        const pngBuffer = await sharp(imageBuffer).png().toBuffer();
+        
+        const img = await loadImage(pngBuffer);
         const canvas = createCanvas(img.width, img.height);
         const ctx = canvas.getContext('2d');
 
