@@ -6,7 +6,7 @@ A Node.js/TypeScript implementation of the signature detection system using YOLO
 
 ## 🎥 Demo Video
 
-**Watch the system in action:** [Demo Video on Google Drive](https://drive.google.com/file/d/1ZNG5jIFpTrwEoAjkndUAKllohoySiD52/view?usp=sharing)
+**Watch the system in action:** [Demo Video on Google Drive](https://drive.google.com/file/d/1JwVqLLO7TZUQ6_Q4Vg5kM-EZHvLQCPHo/view?usp=sharing)
 
 ---
 
