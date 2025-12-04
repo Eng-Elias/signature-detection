@@ -3,7 +3,7 @@
  */
 
 import sharp from 'sharp';
-import { createCanvas, loadImage } from 'canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { BoundingBox } from './types';
 import { DEFAULT_SIGNATURE_PADDING } from './constants';
 

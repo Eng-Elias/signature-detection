@@ -1,19 +1,17 @@
 /**
- * PDF processing utilities using pdfjs-dist
+ * PDF processing utilities using pdfjs-dist v5.x with @napi-rs/canvas
  */
 
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.js';
-import { createCanvas } from 'canvas';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { createCanvas } from '@napi-rs/canvas';
 import { DEFAULT_PDF_SCALE } from './constants';
 
-// NodeJS Canvas factory for pdfjs
+// NodeJS Canvas factory for pdfjs-dist v5.x using @napi-rs/canvas
 class NodeCanvasFactory {
     create(width: number, height: number) {
         const canvas = createCanvas(width, height);
-        return {
-            canvas,
-            context: canvas.getContext('2d')
-        };
+        const context = canvas.getContext('2d');
+        return { canvas, context };
     }
 
     reset(canvasAndContext: any, width: number, height: number) {
@@ -22,8 +20,6 @@ class NodeCanvasFactory {
     }
 
     destroy(canvasAndContext: any) {
-        canvasAndContext.canvas.width = 0;
-        canvasAndContext.canvas.height = 0;
         canvasAndContext.canvas = null;
         canvasAndContext.context = null;
     }
@@ -48,13 +44,25 @@ export class PDFProcessor {
     }
 
     /**
+     * Create document loading options for pdfjs
+     */
+    private getDocumentOptions(pdfBuffer: Buffer) {
+        return {
+            data: new Uint8Array(pdfBuffer),
+            useSystemFonts: true,
+            // Disable features that cause issues in Node.js
+            isEvalSupported: false,
+            isOffscreenCanvasSupported: false,
+            // Use canvas factory for all operations
+            canvasFactory: new NodeCanvasFactory()
+        };
+    }
+
+    /**
      * Convert PDF pages to images
      */
     async pdfToImages(pdfBuffer: Buffer): Promise<Buffer[]> {
-        const loadingTask = pdfjsLib.getDocument({
-            data: new Uint8Array(pdfBuffer),
-            useSystemFonts: true
-        });
+        const loadingTask = pdfjsLib.getDocument(this.getDocumentOptions(pdfBuffer));
 
         const pdfDoc = await loadingTask.promise;
         const pageCount = pdfDoc.numPages;
@@ -72,10 +80,7 @@ export class PDFProcessor {
      * Extract a specific page from PDF as image
      */
     async extractPage(pdfBuffer: Buffer, pageIndex: number): Promise<Buffer> {
-        const loadingTask = pdfjsLib.getDocument({
-            data: new Uint8Array(pdfBuffer),
-            useSystemFonts: true
-        });
+        const loadingTask = pdfjsLib.getDocument(this.getDocumentOptions(pdfBuffer));
 
         const pdfDoc = await loadingTask.promise;
         
@@ -96,23 +101,26 @@ export class PDFProcessor {
 
         const canvasFactory = new NodeCanvasFactory();
         const canvasAndContext = canvasFactory.create(
-            viewport.width,
-            viewport.height
+            Math.floor(viewport.width),
+            Math.floor(viewport.height)
         );
 
         const renderContext = {
             canvasContext: canvasAndContext.context,
             viewport: viewport,
-            canvasFactory: canvasFactory
+            canvasFactory: canvasFactory,
+            background: 'white'
         };
 
+        // Render the PDF page to canvas
         await page.render(renderContext).promise;
 
-        // Convert canvas to buffer
-        const buffer = canvasAndContext.canvas.toBuffer('image/png');
+        // Convert canvas to PNG buffer
+        const buffer = Buffer.from(canvasAndContext.canvas.toBuffer('image/png'));
 
         // Clean up
         canvasFactory.destroy(canvasAndContext);
+        page.cleanup();
 
         return buffer;
     }
@@ -121,11 +129,7 @@ export class PDFProcessor {
      * Get page count from PDF
      */
     async getPageCount(pdfBuffer: Buffer): Promise<number> {
-        const loadingTask = pdfjsLib.getDocument({
-            data: new Uint8Array(pdfBuffer),
-            useSystemFonts: true
-        });
-
+        const loadingTask = pdfjsLib.getDocument(this.getDocumentOptions(pdfBuffer));
         const pdfDoc = await loadingTask.promise;
         return pdfDoc.numPages;
     }
@@ -139,11 +143,7 @@ export class PDFProcessor {
         author?: string;
         subject?: string;
     }> {
-        const loadingTask = pdfjsLib.getDocument({
-            data: new Uint8Array(pdfBuffer),
-            useSystemFonts: true
-        });
-
+        const loadingTask = pdfjsLib.getDocument(this.getDocumentOptions(pdfBuffer));
         const pdfDoc = await loadingTask.promise;
         const metadata: any = await pdfDoc.getMetadata();
         

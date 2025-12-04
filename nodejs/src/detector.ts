@@ -4,7 +4,7 @@
 
 import * as ort from 'onnxruntime-node';
 import sharp from 'sharp';
-import { createCanvas, loadImage } from 'canvas';
+import { createCanvas, loadImage } from '@napi-rs/canvas';
 import { MetricsStorage } from './metricsStorage';
 import { BoundingBox, DetectionResult, PreprocessedImage } from './types';
 import { nms, xywh2xyxy, scaleCoordinates, clip } from './utils';
