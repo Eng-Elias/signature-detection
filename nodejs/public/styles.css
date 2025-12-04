@@ -449,3 +449,89 @@ input[type="range"]::-moz-range-thumb {
 ::-webkit-scrollbar-thumb:hover {
     background: #764ba2;
 }
+
+/* Detection Method Selector */
+.method-selector {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.method-selector > label {
+    display: block;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.method-options {
+    display: flex;
+    gap: 10px;
+}
+
+.method-option {
+    flex: 1;
+    cursor: pointer;
+}
+
+.method-option input[type="radio"] {
+    display: none;
+}
+
+.method-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    transition: all 0.3s;
+    background: #f9fafb;
+}
+
+.method-option input[type="radio"]:checked + .method-label {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+}
+
+.method-option:hover .method-label {
+    border-color: #667eea;
+}
+
+.method-option.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.method-icon {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.method-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #374151;
+}
+
+.method-desc {
+    font-size: 11px;
+    color: #9ca3af;
+    text-align: center;
+}
+
+.llm-warning {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 6px;
+    color: #92400e;
+    font-size: 12px;
+}
+
+/* Active method indicator */
+.method-option input[type="radio"]:checked + .method-label .method-name {
+    color: #667eea;
+}

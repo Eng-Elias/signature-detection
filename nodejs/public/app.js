@@ -1,6 +1,7 @@
 // State management
 let currentPages = [];
 let currentPageIndex = 0;
+let llmAvailable = false;
 
 // DOM elements
 const singleTab = document.getElementById('single-tab');
@@ -11,6 +12,7 @@ const processSingleBtn = document.getElementById('process-single-btn');
 const processMultiBtn = document.getElementById('process-multi-btn');
 const confThreshold = document.getElementById('conf-threshold');
 const iouThreshold = document.getElementById('iou-threshold');
+const iouGroup = document.getElementById('iou-group');
 const confValue = document.getElementById('conf-value');
 const iouValue = document.getElementById('iou-value');
 const statusText = document.getElementById('status-text');
@@ -26,6 +28,63 @@ const loading = document.getElementById('loading');
 const totalInferences = document.getElementById('total-inferences');
 const avgTime = document.getElementById('avg-time');
 const lastTime = document.getElementById('last-time');
+const llmOption = document.getElementById('llm-option');
+const llmWarning = document.getElementById('llm-warning');
+
+// Get selected detection method
+function getDetectionMethod() {
+    const selected = document.querySelector('input[name="detection-method"]:checked');
+    return selected ? selected.value : 'yolov8';
+}
+
+// Check available detection methods on page load
+async function checkDetectionMethods() {
+    try {
+        const response = await fetch('/api/detection-methods');
+        const data = await response.json();
+        
+        const llmMethod = data.methods.find(m => m.id === 'llm');
+        llmAvailable = llmMethod && llmMethod.available;
+        
+        if (!llmAvailable) {
+            llmOption.classList.add('disabled');
+            llmWarning.classList.remove('hidden');
+        } else {
+            llmOption.classList.remove('disabled');
+            llmWarning.classList.add('hidden');
+        }
+        
+        console.log('Detection methods:', data);
+    } catch (error) {
+        console.error('Failed to check detection methods:', error);
+    }
+}
+
+// Handle detection method change
+document.querySelectorAll('input[name="detection-method"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const method = e.target.value;
+        
+        // Show/hide IoU threshold for LLM (not applicable)
+        if (method === 'llm') {
+            iouGroup.style.opacity = '0.5';
+            iouGroup.title = 'IoU threshold not applicable for LLM detection';
+        } else {
+            iouGroup.style.opacity = '1';
+            iouGroup.title = '';
+        }
+        
+        // Prevent selecting LLM if not available
+        if (method === 'llm' && !llmAvailable) {
+            e.preventDefault();
+            document.querySelector('input[name="detection-method"][value="yolov8"]').checked = true;
+            alert('LLM detection is not available. Please set HF_TOKEN environment variable.');
+        }
+    });
+});
+
+// Initialize on page load
+checkDetectionMethods();
 
 // Tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -82,13 +141,16 @@ processSingleBtn.addEventListener('click', async () => {
         return;
     }
 
+    const detectionMethod = getDetectionMethod();
+    
     showLoading();
-    updateStatus('Processing...');
+    updateStatus(`Processing with ${detectionMethod === 'llm' ? 'Qwen2.5-VL LLM' : 'YOLOv8s'}...`);
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('conf_threshold', confThreshold.value);
     formData.append('iou_threshold', iouThreshold.value);
+    formData.append('detection_method', detectionMethod);
 
     try {
         const response = await fetch('/api/process-single', {
@@ -116,7 +178,8 @@ processSingleBtn.addEventListener('click', async () => {
         // Hide navigation controls
         navControls.classList.add('hidden');
 
-        updateStatus(`Found ${data.signatures.length} signature(s)`);
+        const methodLabel = detectionMethod === 'llm' ? '(LLM)' : '(YOLOv8)';
+        updateStatus(`Found ${data.signatures.length} signature(s) ${methodLabel}`);
     } catch (error) {
         updateStatus(error.message, true);
         console.error('Error:', error);
@@ -133,13 +196,16 @@ processMultiBtn.addEventListener('click', async () => {
         return;
     }
 
+    const detectionMethod = getDetectionMethod();
+    
     showLoading();
-    updateStatus('Processing PDF...');
+    updateStatus(`Processing PDF with ${detectionMethod === 'llm' ? 'Qwen2.5-VL LLM' : 'YOLOv8s'}...`);
 
     const formData = new FormData();
     formData.append('file', file);
     formData.append('conf_threshold', confThreshold.value);
     formData.append('iou_threshold', iouThreshold.value);
+    formData.append('detection_method', detectionMethod);
 
     try {
         const response = await fetch('/api/process-pdf', {
@@ -166,7 +232,8 @@ processMultiBtn.addEventListener('click', async () => {
         // Display all signatures grouped by page
         displaySignaturesGrouped(data.pages);
 
-        updateStatus(`Processed ${data.totalPages} pages, found ${data.totalSignatures} total signature(s)`);
+        const methodLabel = detectionMethod === 'llm' ? '(LLM)' : '(YOLOv8)';
+        updateStatus(`Processed ${data.totalPages} pages, found ${data.totalSignatures} total signature(s) ${methodLabel}`);
     } catch (error) {
         updateStatus(error.message, true);
         console.error('Error:', error);

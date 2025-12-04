@@ -11,7 +11,7 @@
         <!-- Header -->
         <header class="header">
             <h1>📝 Signature Detection System</h1>
-            <p class="subtitle">Multi-Page PDF Navigator with YOLOv8</p>
+            <p class="subtitle">Multi-Page PDF Navigator with YOLOv8 & LLM</p>
         </header>
 
         <!-- Main Content -->
@@ -51,13 +51,40 @@
 
                     <div class="settings">
                         <h3>⚙️ Detection Settings</h3>
+                        
+                        <!-- Detection Method Selector -->
+                        <div class="method-selector">
+                            <label>Detection Method:</label>
+                            <div class="method-options">
+                                <label class="method-option">
+                                    <input type="radio" name="detection-method" value="yolov8" checked>
+                                    <span class="method-label">
+                                        <span class="method-icon">🎯</span>
+                                        <span class="method-name">YOLOv8s</span>
+                                        <span class="method-desc">Fast local detection</span>
+                                    </span>
+                                </label>
+                                <label class="method-option" id="llm-option">
+                                    <input type="radio" name="detection-method" value="llm">
+                                    <span class="method-label">
+                                        <span class="method-icon">🤖</span>
+                                        <span class="method-name">Qwen2.5-VL</span>
+                                        <span class="method-desc">LLM via HuggingFace</span>
+                                    </span>
+                                </label>
+                            </div>
+                            <div class="llm-warning hidden" id="llm-warning">
+                                ⚠️ LLM detection requires HF_TOKEN environment variable
+                            </div>
+                        </div>
+
                         <div class="slider-group">
                             <label>
                                 Confidence Threshold: <span id="conf-value">0.25</span>
                                 <input type="range" id="conf-threshold" min="0" max="1" step="0.05" value="0.25">
                             </label>
                         </div>
-                        <div class="slider-group">
+                        <div class="slider-group" id="iou-group">
                             <label>
                                 IoU Threshold: <span id="iou-value">0.50</span>
                                 <input type="range" id="iou-threshold" min="0" max="1" step="0.05" value="0.50">

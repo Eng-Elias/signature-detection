@@ -9,9 +9,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import dotenv from 'dotenv';
 import { SignatureDetector } from './detector';
+import { LLMDetector } from './llmDetector';
 import { PDFProcessor } from './pdfUtils';
 import { SignatureCropper } from './signatureCropper';
-import { PageData } from './types';
+import { PageData, DetectionResult, BoundingBox } from './types';
 import { DEFAULT_PORT, MAX_FILE_SIZE, UPLOAD_DIR } from './constants';
 
 // Load environment variables
@@ -30,9 +31,43 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Initialize components
-const detector = new SignatureDetector();
+const yoloDetector = new SignatureDetector();
 const pdfProcessor = new PDFProcessor();
 const signatureCropper = new SignatureCropper();
+
+// Initialize LLM detector if HF_TOKEN is available
+let llmDetector: LLMDetector | null = null;
+const HF_TOKEN = process.env.HF_TOKEN;
+
+if (HF_TOKEN) {
+    llmDetector = new LLMDetector({
+        hfToken: HF_TOKEN,
+        model: process.env.LLM_MODEL || 'Qwen/Qwen2.5-VL-72B-Instruct'
+    });
+    console.log('✓ LLM detector initialized with HuggingFace token');
+} else {
+    console.log('⚠ HF_TOKEN not set - LLM detection will not be available');
+}
+
+// Detection method type
+type DetectionMethod = 'yolov8' | 'llm';
+
+// Helper function to detect signatures based on method
+async function detectSignatures(
+    imageBuffer: Buffer,
+    method: DetectionMethod,
+    confThreshold: number,
+    iouThreshold: number
+): Promise<DetectionResult> {
+    if (method === 'llm') {
+        if (!llmDetector) {
+            throw new Error('LLM detection not available. Set HF_TOKEN environment variable.');
+        }
+        return await llmDetector.detect(imageBuffer);
+    } else {
+        return await yoloDetector.detect(imageBuffer, confThreshold, iouThreshold);
+    }
+}
 
 // Ensure upload directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
@@ -57,6 +92,7 @@ app.post('/api/process-single', upload.single('file'), async (req: Request, res:
 
         const confThreshold = parseFloat(req.body.conf_threshold || '0.25');
         const iouThreshold = parseFloat(req.body.iou_threshold || '0.5');
+        const detectionMethod = (req.body.detection_method || 'yolov8') as DetectionMethod;
 
         let imageBuffer = req.file.buffer;
 
@@ -67,17 +103,17 @@ app.post('/api/process-single', upload.single('file'), async (req: Request, res:
             imageBuffer = images[0];
         }
 
-        // Detect signatures
-        const result = await detector.detect(imageBuffer, confThreshold, iouThreshold);
+        // Detect signatures using selected method
+        const result = await detectSignatures(imageBuffer, detectionMethod, confThreshold, iouThreshold);
 
         // Draw bounding boxes
-        const annotatedImage = await detector.drawBoxes(imageBuffer, result.boxes);
+        const annotatedImage = await yoloDetector.drawBoxes(imageBuffer, result.boxes);
 
         // Crop signatures
         const signatures = await signatureCropper.cropSignatures(imageBuffer, result.boxes);
 
-        // Get metrics
-        const metrics = detector.getMetricsStorage().getAllMetrics();
+        // Get metrics (only for YOLOv8)
+        const metrics = yoloDetector.getMetricsStorage().getAllMetrics();
 
         res.json({
             success: true,
@@ -87,6 +123,7 @@ app.post('/api/process-single', upload.single('file'), async (req: Request, res:
                 confidence: sig.confidence
             })),
             boxes: result.boxes,
+            detectionMethod,
             metrics: {
                 inferenceTime: result.inferenceTime,
                 totalInferences: metrics.totalInferences,
@@ -116,6 +153,7 @@ app.post('/api/process-pdf', upload.single('file'), async (req: Request, res: Re
 
         const confThreshold = parseFloat(req.body.conf_threshold || '0.25');
         const iouThreshold = parseFloat(req.body.iou_threshold || '0.5');
+        const detectionMethod = (req.body.detection_method || 'yolov8') as DetectionMethod;
 
         // Convert PDF to images
         const images = await pdfProcessor.pdfToImages(req.file.buffer);
@@ -125,17 +163,17 @@ app.post('/api/process-pdf', upload.single('file'), async (req: Request, res: Re
         for (let i = 0; i < images.length; i++) {
             const imageBuffer = images[i];
 
-            // Detect signatures
-            const result = await detector.detect(imageBuffer, confThreshold, iouThreshold);
+            // Detect signatures using selected method
+            const result = await detectSignatures(imageBuffer, detectionMethod, confThreshold, iouThreshold);
 
             // Draw bounding boxes
-            const annotatedImage = await detector.drawBoxes(imageBuffer, result.boxes);
+            const annotatedImage = await yoloDetector.drawBoxes(imageBuffer, result.boxes);
 
             // Crop signatures
             const signatures = await signatureCropper.cropSignatures(imageBuffer, result.boxes);
 
             // Get metrics
-            const metrics = detector.getMetricsStorage().getAllMetrics();
+            const metrics = yoloDetector.getMetricsStorage().getAllMetrics();
 
             pages.push({
                 pageNum: i + 1,
@@ -166,7 +204,8 @@ app.post('/api/process-pdf', upload.single('file'), async (req: Request, res: Re
                 metrics: page.metrics
             })),
             totalPages: pages.length,
-            totalSignatures
+            totalSignatures,
+            detectionMethod
         });
 
     } catch (error: any) {
@@ -180,7 +219,7 @@ app.post('/api/process-pdf', upload.single('file'), async (req: Request, res: Re
  */
 app.get('/api/metrics', (req: Request, res: Response) => {
     try {
-        const metrics = detector.getMetricsStorage().getAllMetrics();
+        const metrics = yoloDetector.getMetricsStorage().getAllMetrics();
         res.json(metrics);
     } catch (error: any) {
         console.error('Error getting metrics:', error);
@@ -196,6 +235,29 @@ app.get('/api/health', (req: Request, res: Response) => {
 });
 
 /**
+ * Get available detection methods
+ */
+app.get('/api/detection-methods', (req: Request, res: Response) => {
+    res.json({
+        methods: [
+            {
+                id: 'yolov8',
+                name: 'YOLOv8s (Local)',
+                description: 'Fast local detection using YOLOv8s ONNX model',
+                available: true
+            },
+            {
+                id: 'llm',
+                name: 'Qwen2.5-VL (LLM)',
+                description: 'LLM-based detection via HuggingFace API',
+                available: llmDetector !== null
+            }
+        ],
+        llmModel: llmDetector ? process.env.LLM_MODEL || 'Qwen/Qwen2.5-VL-72B-Instruct' : null
+    });
+});
+
+/**
  * Start server
  */
 const PORT = process.env.PORT || DEFAULT_PORT;
@@ -204,7 +266,7 @@ async function startServer() {
     try {
         // Load model on startup
         console.log('Loading ONNX model...');
-        await detector.loadModel();
+        await yoloDetector.loadModel();
         console.log('✓ Model loaded successfully');
 
         app.listen(PORT, () => {
@@ -220,13 +282,13 @@ async function startServer() {
 // Graceful shutdown
 process.on('SIGINT', async () => {
     console.log('\nShutting down gracefully...');
-    await detector.cleanup();
+    await yoloDetector.cleanup();
     process.exit(0);
 });
 
 process.on('SIGTERM', async () => {
     console.log('\nShutting down gracefully...');
-    await detector.cleanup();
+    await yoloDetector.cleanup();
     process.exit(0);
 });
 

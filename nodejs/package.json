@@ -30,7 +30,8 @@
     "canvas": "^2.11.2",
     "better-sqlite3": "^9.2.2",
     "dotenv": "^16.3.1",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "@huggingface/inference": "^4.13.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.6",
